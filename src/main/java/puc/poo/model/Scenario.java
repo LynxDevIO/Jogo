@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+/// Classe responsável pela criação dos cenários.
 public class Scenario implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -25,8 +26,17 @@ public class Scenario implements Serializable {
         objects.put(object.getName(), object);
     }
 
-    public void removeObject(String name) {
+    public void removeObjectByName(String name) {
         objects.remove(name);
+    }
+
+    public void removeObject(GameObject object) {
+        objects.entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().equals(object))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .ifPresent(objects::remove);
     }
 
     public GameObject getObject(String name) {

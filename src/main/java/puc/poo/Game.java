@@ -1,9 +1,9 @@
 package puc.poo;
 
-import puc.poo.model.CommandProcessor;
+import puc.poo.controller.CommandProcessor;
 import puc.poo.model.Player;
 import puc.poo.model.Scenario;
-import puc.poo.model.ScenarioManager;
+import puc.poo.controller.ScenarioManager;
 
 import java.io.*;
 import java.util.HashMap;
@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 
-// O JOGO SE INICIA POR ESSA CLASSE!
+/// Classe que inicia o jogo e suas dependências.
 public class Game implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;

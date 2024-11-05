@@ -1,8 +1,14 @@
-package puc.poo.model;
+package puc.poo.controller;
+
+import puc.poo.model.GameObject;
+import puc.poo.model.Player;
+import puc.poo.model.Scenario;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/// Classe responsável pelo gerencimaneto dos cenários.
+// Todo: os cenários precisam ser atualizados com a nova lógica!!
 public class ScenarioManager {
     private final Player player;
     private final Map<String, Scenario> scenarios;

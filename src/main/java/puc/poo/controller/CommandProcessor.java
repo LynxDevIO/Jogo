@@ -1,6 +1,9 @@
-package puc.poo.model;
+package puc.poo.controller;
 
 import puc.poo.Game;
+import puc.poo.model.GameObject;
+import puc.poo.model.Player;
+import puc.poo.model.Scenario;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,11 +11,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static java.io.IO.readln;
 
+/// Classe responsável pelo gerenciamento dos comandos que o jogador vai usar.
 public class CommandProcessor {
     private Player player;
     private Map<String, Scenario> scenarios;
@@ -28,6 +33,7 @@ public class CommandProcessor {
         String subject = parts.length > 1 ? parts[1] : null;
 
         switch (action) {
+            case "observar":
             case "ver":
                 look(subject);
                 break;
@@ -69,31 +75,50 @@ public class CommandProcessor {
                     System.out.println("Ok. Continue a jogar!");
                 }
                 break;
-            case "i": // Inventory command
+            case "i": // Comando de inventário
             case "inventário":
                 showInventory();
                 break;
+            case "ajuda":
+                System.out.println("Lista de comandos: observar/ver, entrar/ir, abrir, fechar, pegar, largar/soltar," +
+                        " usar, voltar, i/inventário");
+                System.out.println("Comando de sistema: salvar, carregar, sair");
             default:
                 System.out.println("Não entendo isso.");
         }
     }
 
+    // TODO: Aprimorar
     private void goToScenario(String direction) {
         Scenario currentScenario = player.getCurrentScenario();
         Scenario nextScenario = currentScenario.getExit(direction);
+        ArrayList<String> cardinals = new ArrayList<>(){
+            {
+                add("norte");
+                add("sul");
+                add("leste");
+                add("oeste");
+            }
+        };
 
+        // ? direction = direction.toUpperCase();
         if (nextScenario != null) {
-            if (direction.equals("porta") && currentScenario.getObject("porta") != null) {
-                GameObject door = currentScenario.getObject("porta");
-                if (!door.isOpen()) {
-                    System.out.println("A porta está fechada. Você deve destrancá-la primeiro.");
-                    return; // Previne passar pela porta ("IR") se ela estiver fechada
+            // Se o objeto for uma "porta"
+            if (!currentScenario.getObject(direction).isOpenable()) {
+                if (!cardinals.contains(direction)) {
+                    System.out.println("Não há caminho para essa direção.");
+                    return;
+                }
+            } else {
+                if (!currentScenario.getObject(direction).isOpen()) {
+                    System.out.println("Esse caminho está fechado.");
+                    return;
                 }
             }
             player.setCurrentScenario(nextScenario);
             System.out.println("Você chegou em \"" + nextScenario.getName() + "\".");
         } else {
-            System.out.println("Não posso ir ali");
+            System.out.println("Não posso ir ali.");
         }
     }
 
@@ -105,7 +130,7 @@ public class CommandProcessor {
             if (obj != null) {
                 System.out.println(obj.getDescription());
             } else {
-                System.out.println("Não entendo isso.");
+                System.out.println("Não entendo \"%s\".".formatted(subject.toUpperCase()));
             }
         }
     }
@@ -113,44 +138,33 @@ public class CommandProcessor {
     private void open(String subject) {
         GameObject obj = player.getCurrentScenario().getObject(subject);
         if (obj != null) {
-            if (obj.getName().equals("porta")) {
-                GameObject key = player.getFromInventory("chave");
-                    // TODO: Nesses casos, seria melhor obter o tipo do item (por atributo da classe) e seu ID Se o ID da chave for o mesmo que a "fechadura" pede, então a porta abre.
-                if (key != null) {
-                    obj.setOpen(true); // Fecha e abre a porta
-                    System.out.println("Você destrancou e abriu \"" + subject + "\".");
-                } else {
-                    System.out.println("A porta está fechada. Você precisa de um chava para abri-la.");
-                }
-            } else if (obj.isOpenable()) {
-                obj.setOpen(true);
-                System.out.println("Você abriu \"" + subject + "\".");
-            } else {
-                System.out.println("Não posso abrir isso.");
-            }
+            obj.unlock(player.getInventory());
         } else {
-            System.out.println("Não entendo isso.");
+            System.out.println("Não entendo \"%s\".".formatted(subject).toUpperCase());
         }
     }
 
     private void close(String subject) {
         GameObject obj = player.getCurrentScenario().getObject(subject);
-        if (obj != null && obj.isOpenable() && obj.isOpen()) {
-            obj.setOpen(false);
-            System.out.println("Você fechou \"" + subject + "\".");
+        if (obj != null) {
+            obj.lock(player.getInventory());
         } else {
-            System.out.println("Você não pode fechar isso.");
+            System.out.println("Não entendo \"%s\".".formatted(subject).toUpperCase());
         }
     }
 
     private void take(String subject) {
         GameObject obj = player.getCurrentScenario().getObject(subject);
-        if (obj != null && obj.isStorable()) {
-            player.addToInventory(obj);
-            player.getCurrentScenario().removeObject(subject);
-            System.out.println("Você pegou \"" + subject + "\".");
+        if (obj != null) {
+            if (obj.isStorable()) {
+                player.addToInventory(obj);
+                player.getCurrentScenario().removeObjectByName(subject);
+                System.out.println("Você pegou \"" + subject.toUpperCase() + "\".");
+            } else {
+                System.out.println("Você não pode pegar isso.");
+            }
         } else {
-            System.out.println("Você não pode pegar isso.");
+            System.out.println("Não entendo \"%s\".".formatted(subject).toUpperCase());
         }
     }
 
@@ -159,49 +173,31 @@ public class CommandProcessor {
         if (obj != null) {
             player.removeFromInventory(subject);
             player.getCurrentScenario().addObject(obj);
-            // TODO: Precisamos adicionar uma condição aqui e talvez modificar a classe do objeto para guardar o cenário original de um item, de modo que, quando ele for solto (DROP) pelo jogador, voltará ao cenário original OU não poderá ser solto no cenário diferente
-            System.out.println("Você soltou \"" + subject + "\".");
+            System.out.println("Você soltou \"" + subject.toUpperCase() + "\".");
         } else {
-            System.out.println("Você não tem isso.");
+            System.out.println("Você não tem \"%s.\"".formatted(subject).toUpperCase());
         }
     }
 
     private void use(String subject) {
         GameObject obj = player.getCurrentScenario().getObject(subject);
-        // Esse metodo é específico para um cenário.
-        // TODO: Precisamos refatorá-lo pra permitir mais interações com itens e facilidade para configurar isso
         if (obj != null) {
-            switch (obj.getName()) {
-                case "pote" -> {
-                    System.out.println("Você encontrou uma chave de baixo do pote!");
-                    GameObject key = new GameObject("chave", "Uma chave enferrujada.", 0, 0, true);
-                    player.addToInventory(key);
-                    player.getCurrentScenario().removeObject("pote"); // Remove o pote após o uso
-                }
-
-                // TODO: Talvez devessemos adicionar uma lista de status do jogador como faminto, com frio etc
-                case "fireplace" -> System.out.println("Você usou a lareira para se esquentar.");
-
-                case "portrait" -> {
-                    System.out.println("Você encontrou uma chave atrás do retrato!");
-                    GameObject key = new GameObject("chave", "Uma chave enferrujada..", 0, 0, true);
-                    player.addToInventory(key);
-                    player.getCurrentScenario().removeObject("retrato");
-                }
-
-                default -> System.out.println("Você não pode usar isso.");
+            if (obj.hasAction() ) {
+                obj.getAction().execute();
+            } else {
+                System.out.println("Esse item não pode ser usado.");
             }
         } else {
-            System.out.println("Você não tem isso.");
+            System.out.println("Parece não haver \"%s\" ao redor.".formatted(subject).toUpperCase());
         }
     }
 
     private void back() {
         if (player.hasPreviousScenario()) {
             player.setCurrentScenario(player.getPreviousScenario());
-            System.out.println("Você voltou ao cenário anterior.");
+            System.out.println("Você voltou a \"%s\".".formatted(player.getCurrentScenario().getName().toUpperCase()));
         } else {
-            System.out.println("Você não pode voltar mais.");
+            System.out.println("Não há lugar para retornar.");
         }
     }
 

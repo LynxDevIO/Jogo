@@ -3,14 +3,14 @@ package puc.poo.model;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Stack;
 
+/// Classe responsável pela criação e gerenciamento do Jogador.
 public class Player implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
     private Scenario currentScenario;
-    private final List<GameObject> inventory;
+    private final ArrayList<GameObject> inventory;
     private final Stack<Scenario> previousScenarios; // PILHA para rastrear os cenários anteriores
 
     public Player() { // Inicializar o inventário e os cenários anteriores que o jogador passou
@@ -54,7 +54,7 @@ public class Player implements Serializable {
         return previousScenarios.pop(); // Remove o cenário anterior da PILHA (e retorna esse cenário)
     }
 
-    public List<GameObject> getInventory() {
+    public ArrayList<GameObject> getInventory() {
         return inventory; // Retorna a lista de GameObjects que estão no inventário do jogador
     }
 } 
