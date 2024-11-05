@@ -14,6 +14,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static java.io.IO.readln;
 
@@ -33,6 +34,7 @@ public class CommandProcessor {
         String subject = parts.length > 1 ? parts[1] : null;
 
         switch (action) {
+            case "olhar":
             case "observar":
             case "ver":
                 look(subject);
@@ -67,7 +69,7 @@ public class CommandProcessor {
                 loadGame();
                 break;
             case "sair":
-                String resposta = readln("Deseja fechar o jogo?").toLowerCase();
+                String resposta = readln("Deseja fechar o jogo? ").toLowerCase();
                 if (resposta.equals("sim")) {
                     System.out.println("Fechando jogo...");
                     System.exit(0);
@@ -88,37 +90,45 @@ public class CommandProcessor {
         }
     }
 
-    // TODO: Aprimorar
-    private void goToScenario(String direction) {
+    private void goToScenario(String input) {
         Scenario currentScenario = player.getCurrentScenario();
-        Scenario nextScenario = currentScenario.getExit(direction);
-        ArrayList<String> cardinals = new ArrayList<>(){
-            {
-                add("norte");
-                add("sul");
-                add("leste");
-                add("oeste");
-            }
-        };
+        Set<String> cardinals = Set.of("norte", "sul", "leste", "oeste");
 
-        // ? direction = direction.toUpperCase();
-        if (nextScenario != null) {
-            // Se o objeto for uma "porta"
-            if (!currentScenario.getObject(direction).isOpenable()) {
-                if (!cardinals.contains(direction)) {
-                    System.out.println("Não há caminho para essa direção.");
-                    return;
+        // Verificar se a entrada é uma direção cardinal
+        if (cardinals.contains(input)) {
+            Scenario nextScenario = currentScenario.getExit(input);
+
+            // Verificar se existe um cenário nessa direção
+            if (nextScenario != null) {
+                player.setCurrentScenario(nextScenario);
+                System.out.println("Você chegou em \"" + nextScenario.getName() + "\".");
+            } else {
+                System.out.println("Não há caminho para essa direção.");
+            }
+            return;
+        }
+
+        // Caso contrário, verificar se a entrada é um objeto (como uma porta)
+        GameObject blockingObject = currentScenario.getObject(input);
+        if (blockingObject != null) {
+            // Verificar se o objeto é abrível e está aberto
+            if (blockingObject.isOpenable()) {
+                if (blockingObject.isOpen()) {
+                    Scenario nextScenario = currentScenario.getExit(input); // Obter o cenário associado a esse objeto
+                    if (nextScenario != null) {
+                        player.setCurrentScenario(nextScenario);
+                        System.out.println("Você chegou em \"" + nextScenario.getName() + "\".");
+                    } else {
+                        System.out.println("Esse caminho não leva a lugar nenhum.");
+                    }
+                } else {
+                    System.out.println("Esse caminho está fechado.");
                 }
             } else {
-                if (!currentScenario.getObject(direction).isOpen()) {
-                    System.out.println("Esse caminho está fechado.");
-                    return;
-                }
+                System.out.println("Esse objeto não pode ser usado para viajar.");
             }
-            player.setCurrentScenario(nextScenario);
-            System.out.println("Você chegou em \"" + nextScenario.getName() + "\".");
         } else {
-            System.out.println("Não posso ir ali.");
+            System.out.println("Direção ou objeto inválido.");
         }
     }
 
@@ -179,13 +189,23 @@ public class CommandProcessor {
         }
     }
 
+    /// Se o objeto tiver uma ação, ela será executada. Caso contrário, se ele armazena objetos, a ação será de obter o item.
     private void use(String subject) {
         GameObject obj = player.getCurrentScenario().getObject(subject);
         if (obj != null) {
             if (obj.hasAction() ) {
                 obj.getAction().execute();
             } else {
-                System.out.println("Esse item não pode ser usado.");
+                if (obj.isStorage()) {
+                    System.out.println("Há alguma coisa dentro desse objeto...");
+                    System.out.println("Você colocou no seu inventário:");
+                    obj.getContents().forEach(e -> {
+                        player.addToInventory(e);
+                        System.out.println("- \"%s\"".formatted(e.getName().toUpperCase()));
+                    });
+                } else {
+                    System.out.println("Esse item não pode ser usado.");
+                }
             }
         } else {
             System.out.println("Parece não haver \"%s\" ao redor.".formatted(subject).toUpperCase());

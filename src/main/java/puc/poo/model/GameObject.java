@@ -9,6 +9,8 @@ public class GameObject implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    private static ArrayList<GameObject> allGameObjects = new ArrayList<>();
+
     private final int id;
     private String name;
     private String description;
@@ -22,8 +24,9 @@ public class GameObject implements Serializable {
     private ArrayList<GameObject> contents; // Conteúdo armazenado
 
     // Construtor genérico
-    public GameObject(int id, String name, String description) {
-        this.id = id;
+    public GameObject(String name, String description) {
+        allGameObjects.add(this);
+        this.id = allGameObjects.size();
         this.name = name;
         this.description = description;
     }
@@ -33,9 +36,13 @@ public class GameObject implements Serializable {
     }
 
     // Configurar como Storage (pode conter outros objetos)
-    public void setAsStorage() {
-        this.isStorage = true;
-        this.contents = new ArrayList<>();
+    public void setAsStorage(boolean storable) {
+        this.isStorage = storable;
+        if (storable) {
+            this.contents = new ArrayList<>();
+        } else {
+            this.contents = null;
+        }
     }
 
     // Cconfigurar tranca e interatividade
@@ -59,7 +66,7 @@ public class GameObject implements Serializable {
         return isOpenable;
     }
 
-    public void setOpenable(boolean openable) {
+    public void setAsOpenable(boolean openable) {
         isOpenable = openable;
     }
 
@@ -133,9 +140,9 @@ public class GameObject implements Serializable {
 
     // Métodos para objetos interagíveis e destrancáveis
     public void unlock(ArrayList<GameObject> inventory) {
-        // Se o objeto não for interativo
-        if (!this.isInteractive()) {
-            System.out.println("Não é possível destrancar esse objeto. Ele não faz nada.");
+        // Se o objeto não for abrível
+        if (!this.isOpenable()) {
+            System.out.println("Não é possível destrancar esse objeto. Ele não possui trancas.");
             return;
         }
 
@@ -147,7 +154,7 @@ public class GameObject implements Serializable {
 
         // Procura um item no inventário que destranque este objeto
         for (GameObject item : inventory) {
-            if (item.isInteractive() && item.getId() == this.keyId) {
+            if (item.getId() == this.keyId) {
                 this.isOpen = true;
                 System.out.println("Você abriu \"" + this.getName().toUpperCase() +
                         "\" com \"" + item.getName().toUpperCase() + "\"!");
@@ -160,9 +167,9 @@ public class GameObject implements Serializable {
     }
 
     public void lock(ArrayList<GameObject> inventory) {
-        // Se o objeto não for interativo
-        if (!this.isInteractive()) {
-            System.out.println("Não é possível trancar esse objeto. Ele não faz nada.");
+        // Se o objeto não for abrível
+        if (!this.isOpenable()) {
+            System.out.println("Não é possível trancar esse objeto. Ele não possui trancas.");
             return;
         }
 
@@ -174,11 +181,11 @@ public class GameObject implements Serializable {
 
         // Procura um item no inventário que tranque este objeto
         for (GameObject item : inventory) {
-            if (item.isInteractive() && item.getId() == this.keyId) {
+            if (item.getId() == this.keyId) {
                 this.isOpen = true;
                 System.out.println("Você trancou \"" + this.getName().toUpperCase() +
                         "\" com \"" + item.getName().toUpperCase() + "\"!");
-                return;  // Sai do método após destravar
+                return;  // Sai do metodo após destravar
             }
         }
 
@@ -210,5 +217,9 @@ public class GameObject implements Serializable {
         } else {
             System.out.println("Este objeto não possui uma ação definida.");
         }
+    }
+
+    public static ArrayList<GameObject> getAllObjects() {
+        return allGameObjects;
     }
 }

@@ -1,6 +1,7 @@
 package puc.poo.controller;
 
 import puc.poo.model.GameObject;
+import puc.poo.model.ObjectAction;
 import puc.poo.model.Player;
 import puc.poo.model.Scenario;
 
@@ -18,39 +19,62 @@ public class ScenarioManager {
         this.scenarios = new HashMap<>();
     }
 
+    /// Convenção para nomear objetos:
+    ///  <p><b>* nomeDoCenario_nomeDoObjeto</b></p>
     public void initializeScenarios() {
         // CENÁRIO: FLORESTA
         Scenario forest = new Scenario("Floresta", "Você está numa floresta bem fria. Há uma cabine ao norte.", "forest.png");
         scenarios.put(forest.getName(), forest);
 
-        // CENÁRIO: EXTERIOR_CABINE
+        // CENÁRIO: EXTERIOR CABINE
         Scenario cabinFront = new Scenario("Exterior da Cabine", "Você está em frente à cabine.", "cabin_front.png");
-        GameObject pot = new GameObject("pote", "Um pote de planta um pouco inclinado", 0, 0, true);
-        cabinFront.addObject(pot);
-        GameObject door = new GameObject("porta", "Uma porta de madeira.", 0, 0, false);
-        cabinFront.addObject(door);
+        GameObject cabinFront_pot = new GameObject("pote", "Um pote de planta um pouco inclinado");
+        cabinFront_pot.setAsStorage(true);
+
+        GameObject cabinFront_key = new GameObject("chave da cabine", "Esta é a chave da cabine. Muito bem escondida por sinal.");
+        cabinFront_key.setAsStorable();
+        cabinFront_pot.getContents().add(cabinFront_key);
+
+        GameObject cabinFront_door = new GameObject("porta", "Uma porta de madeira.");
+        cabinFront_door.setAsOpenable(true);
+        cabinFront_door.setKeyId(cabinFront_key.getId());
+
+        cabinFront.addObject(cabinFront_pot);
+        cabinFront.addObject(cabinFront_door);
         scenarios.put(cabinFront.getName(), cabinFront);
 
-        // Cenário: INTERIOR_CABINE
+        // Cenário: INTERIOR CABINE
         Scenario insideCabin = new Scenario("Interior da Cabine", "Você está dentro da cabine.", "inside_cabin.png");
-        GameObject fireplace = new GameObject("lareira", "Uma lareira acesa.", 0, 0, true);
-        GameObject portrait = new GameObject("retrato", "Um retrato na parede.", 0, 0, true);
-        GameObject chest = new GameObject("baú", "Um baú de madeira.", 0, 0, true);
-        GameObject key = new GameObject("chave", "Uma chave velha.", 0, 0, true);
 
-        // Adicionar os objetos aos cenários
-        insideCabin.addObject(fireplace);
-        insideCabin.addObject(portrait);
-        insideCabin.addObject(chest);
-        portrait.addContainedObject(key); // a CHAVE está dentro do RETRATO (inicialmente)
+        GameObject insideCabin_fireplace = new GameObject("lareira", "Uma lareira acesa.");
+        insideCabin_fireplace.setAction(new ObjectAction(){{
+            setActionDescriptionActive("Você se esquenta à lareira.");
+            setActionDescriptionInactive("Você já se esquentou.");
+            setActive(true);
+        }});
+
+        GameObject insideCabin_portrait = new GameObject("retrato", "Um retrato na parede.");
+        insideCabin_portrait.setAsStorage(true);
+
+        GameObject insideCabin_chest = new GameObject("baú", "Um baú de madeira.");
+        insideCabin_chest.setAsStorage(true);
+        insideCabin_chest.setAsOpenable(true);
+
+        GameObject insideCabin_key = new GameObject("chave", "Uma chave velha.");
+        insideCabin_key.setStorable(true);
+        insideCabin_chest.getContents().add(cabinFront_key);
+
+        insideCabin.addObject(insideCabin_fireplace);
+        insideCabin.addObject(insideCabin_portrait);
+        insideCabin.addObject(insideCabin_chest);
 
         scenarios.put(insideCabin.getName(), insideCabin);
 
         // Definir as saídas para cada cenário
         forest.addExit("norte", cabinFront); // da floresta para a entrada da cabine
         cabinFront.addExit("sul", forest); // da entrada da cabine de volta para a floresta
-        cabinFront.addExit("porta", insideCabin); // da entrada da cabine para dentro dela
-        insideCabin.addExit("porta", cabinFront); // de dentro da cabine para a entrada dela
+        cabinFront.addExit(cabinFront_door.getName(), insideCabin); // da entrada da cabine para dentro dela
+        insideCabin.addExit(cabinFront_door.getName(), cabinFront); // de dentro da cabine para a entrada dela
 
         // Definir o cenário FLORESTA como cenário atual.
         player.setCurrentScenario(forest);

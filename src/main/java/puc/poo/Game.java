@@ -30,9 +30,13 @@ public class Game implements Serializable {
     public void start() {
         Scanner scanner = new Scanner(System.in);
         String command;
+        int flag = 0;
 
         while (true) {
-            System.out.println(player.getCurrentScenario().getDescription());
+            if (flag == 0) {
+                System.out.println(player.getCurrentScenario().getDescription());
+                flag = 1;
+            }
             command = scanner.nextLine();
             commandProcessor.processCommand(command);
         }
