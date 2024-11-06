@@ -85,6 +85,7 @@ public class CommandProcessor {
                 System.out.println("Lista de comandos: observar/ver, entrar/ir, abrir, fechar, pegar, largar/soltar," +
                         " usar, voltar, i/inventário");
                 System.out.println("Comando de sistema: salvar, carregar, sair");
+                break;
             default:
                 System.out.println("Não entendo isso.");
         }
@@ -181,11 +182,11 @@ public class CommandProcessor {
     private void drop(String subject) {
         GameObject obj = player.getFromInventory(subject);
         if (obj != null) {
-            player.removeFromInventory(subject);
+            player.removeFromInventory(obj);
             player.getCurrentScenario().addObject(obj);
             System.out.println("Você soltou \"" + subject.toUpperCase() + "\".");
         } else {
-            System.out.println("Você não tem \"%s.\"".formatted(subject).toUpperCase());
+            System.out.println("Você não tem \"%s\".".formatted(subject.toUpperCase()));
         }
     }
 

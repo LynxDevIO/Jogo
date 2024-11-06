@@ -3,6 +3,7 @@ package puc.poo.model;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Stack;
 
 /// Classe responsável pela criação e gerenciamento do Jogador.
@@ -34,12 +35,17 @@ public class Player implements Serializable {
     }
 
     public void removeFromInventory(String name) {
-        inventory.removeIf(obj -> obj.getName().equals(name));
+        inventory.removeIf(obj -> obj.getName().toLowerCase().contains(name.toLowerCase()));
+    }
+
+    public void removeFromInventory(GameObject object) {
+        inventory.remove(object);
     }
 
     public GameObject getFromInventory(String name) {
+        name = name.toLowerCase();
         for (GameObject obj : inventory) {
-            if (obj.getName().equals(name)) {
+            if (obj.getName().contains(name)) {
                 return obj;
             }
         }
