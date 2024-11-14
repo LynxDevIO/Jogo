@@ -2,8 +2,6 @@ package puc.poo.model;
 
 import java.util.ArrayList;
 
-// TODO: concluir!
-
 /// Classe responsável pela criação e gerenciamento de condições de objetos do jogo.
 public class ObjectCondition {
     private ArrayList<GameObject> requiredObjects;
@@ -34,5 +32,11 @@ public class ObjectCondition {
             }
         }
         return true;
+    }
+
+    // func. para verificar se a condição é satisfeita com base no cenário atual
+    public boolean checkCondition(Player player) {
+        // Verifica se o jogador está no cenário da floresta
+        return player.getCurrentScenario().getName().equals("Floresta");
     }
 }

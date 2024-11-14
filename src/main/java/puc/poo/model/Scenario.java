@@ -6,6 +6,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 /// Classe responsável pela criação dos cenários.
+/// <p>O nome {@link Scenario#name} de qualquer cenário deve ser <b>único</b>.</p>
+/// <p>Métodos desta classe:</p>
+/// <p>{@code Scenario.addObject} -> adiciona objeto do jogo ao cenário</p>
+/// <p>{@code Scenario.addExit} -> adiciona saída ao cenário
+/// <p>{@code Scenario.removeObjectByName} -> remove objeto do jogo pelo seu nome
+/// <p>{@code Scenario.removeObject} -> remove objeto do jogo pelo seu objeto
+/// <p>{@code Scenario.getObject} -> obtém objeto do jogo no cenário
+/// <p>{@code Scenario.getDescription} -> obtém descrição do cenário
+/// <p>{@code Scenario.getName} -> obtém o nome do cenário
+/// <p>{@code Scenario.getExit} -> obtém a saída do cenário a partir da direção fornecida
 public class Scenario implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -27,7 +37,12 @@ public class Scenario implements Serializable {
     }
 
     public void removeObjectByName(String name) {
-        objects.remove(name);
+        name = name.toLowerCase();
+        for (GameObject obj : objects.values()) {
+            if (obj.getName().contains(name)) {
+                objects.remove(obj);
+            }
+        }
     }
 
     public void removeObject(GameObject object) {
@@ -40,7 +55,13 @@ public class Scenario implements Serializable {
     }
 
     public GameObject getObject(String name) {
-        return objects.get(name);
+        name = name.toLowerCase();
+        for (GameObject obj : objects.values()) {
+            if (obj.getName().contains(name)) {
+                return obj;
+            }
+        }
+        return null;
     }
 
     public String getDescription() {

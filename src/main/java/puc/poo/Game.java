@@ -1,6 +1,8 @@
 package puc.poo;
 
 import puc.poo.controller.CommandProcessor;
+import puc.poo.controller.DoveSpotter;
+import puc.poo.model.Dove;
 import puc.poo.model.Player;
 import puc.poo.model.Scenario;
 import puc.poo.controller.ScenarioManager;
@@ -15,12 +17,13 @@ public class Game implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
     public Player player;
+    public Dove dove = new Dove();
     public Map<String, Scenario> scenarios;
     private final CommandProcessor commandProcessor;
 
     public Game() {
         player = new Player();
-        ScenarioManager scenarioManager = new ScenarioManager(player);
+        ScenarioManager scenarioManager = new ScenarioManager(player, dove);
         scenarios = new HashMap<>();
         scenarioManager.initializeScenarios();
         commandProcessor = new CommandProcessor(player, scenarios);
@@ -42,7 +45,7 @@ public class Game implements Serializable {
         sc.nextLine();
         System.out.print("Use o comando \"ajuda\" para listar os comandos ou \"sair\" para encerrar o jogo.");
         sc.nextLine();
-        System.out.println("Vamos começar? \"Não\" para sair ou qualquer entrada para continuar.");
+        System.out.println("Vamos começar? Digite \"NÃO\" para sair ou qualquer entrada para continuar.");
         answer = sc.nextLine().toLowerCase();
         if (answer.equals("não") || answer.equals("nao") || answer.equals("n")) {
             System.out.println("Saindo do jogo...");
@@ -56,6 +59,9 @@ public class Game implements Serializable {
         int flag = 0;
 
         showWelcomeMessage();
+        DoveSpotter doveSpotter = new DoveSpotter(dove, player);
+        Thread doveSpotterThread = new Thread(doveSpotter);
+        doveSpotterThread.start();
 
         while (true) {
             if (flag == 0) {

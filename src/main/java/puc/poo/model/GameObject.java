@@ -19,6 +19,7 @@ public class GameObject implements Serializable {
     private int keyId; // ID da chave para destravar, se aplicável
     private boolean isOpenable; // Objeto é abrível?
     private boolean isOpen; // Objeto está aberto/fechado?
+    // private boolean isLocked; // Objeto está trancado/destrancado?
     private boolean hasAction; // Objeto possui ação?
     private ObjectAction action; // Ação do objeto
     private ArrayList<GameObject> contents; // Conteúdo armazenado
@@ -162,6 +163,10 @@ public class GameObject implements Serializable {
             }
         }
 
+        if (!this.isOpen()) {
+            System.out.printf("O objeto \"%s\" está fechado.\n", this.getName().toUpperCase());
+        }
+
         // Se não encontrou um item válido
         System.out.println("Você não possui um item que destranque \"" + this.getName().toUpperCase() + "\".");
     }
@@ -174,7 +179,7 @@ public class GameObject implements Serializable {
         }
 
         // Se o objeto já estiver trancado
-        if (this.isOpen) {
+        if (!this.isOpen) {
             System.out.println("Esse objeto já está trancado.");
             return;
         }
@@ -182,7 +187,7 @@ public class GameObject implements Serializable {
         // Procura um item no inventário que tranque este objeto
         for (GameObject item : inventory) {
             if (item.getId() == this.keyId) {
-                this.isOpen = true;
+                this.isOpen = false;
                 System.out.println("Você trancou \"" + this.getName().toUpperCase() +
                         "\" com \"" + item.getName().toUpperCase() + "\"!");
                 return;  // Sai do metodo após destravar

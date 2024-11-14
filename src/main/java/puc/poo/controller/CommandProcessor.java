@@ -1,6 +1,7 @@
 package puc.poo.controller;
 
 import puc.poo.Game;
+import puc.poo.model.Dove;
 import puc.poo.model.GameObject;
 import puc.poo.model.Player;
 import puc.poo.model.Scenario;
@@ -11,7 +12,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +21,7 @@ import static java.io.IO.readln;
 /// Classe responsável pelo gerenciamento dos comandos que o jogador vai usar.
 public class CommandProcessor {
     private Player player;
+    private Dove dove;
     private Map<String, Scenario> scenarios;
 
     public CommandProcessor(Player player, Map<String, Scenario> scenarios) {
@@ -31,7 +32,16 @@ public class CommandProcessor {
     public void processCommand(String command) {
         String[] parts = command.split(" ");
         String action = parts[0];
-        String subject = parts.length > 1 ? parts[1] : null;
+        String subject;
+        if (parts.length > 1) {
+            if (parts[1].contains(":")) {
+                subject = parts[1].split(":")[1];
+            } else {
+                subject = parts[1];
+            }
+        } else {
+            subject = null;
+        }
 
         switch (action) {
             case "olhar":
@@ -95,41 +105,45 @@ public class CommandProcessor {
         Scenario currentScenario = player.getCurrentScenario();
         Set<String> cardinals = Set.of("norte", "sul", "leste", "oeste");
 
-        // Verificar se a entrada é uma direção cardinal
-        if (cardinals.contains(input)) {
-            Scenario nextScenario = currentScenario.getExit(input);
+        if (input != null) {
+            // Verificar se a entrada é uma direção cardinal
+            if (cardinals.contains(input)) {
+                Scenario nextScenario = currentScenario.getExit(input);
 
-            // Verificar se existe um cenário nessa direção
-            if (nextScenario != null) {
-                player.setCurrentScenario(nextScenario);
-                System.out.println("Você chegou em \"" + nextScenario.getName() + "\".");
-            } else {
-                System.out.println("Não há caminho para essa direção.");
+                // Verificar se existe um cenário nessa direção
+                if (nextScenario != null) {
+                    player.setCurrentScenario(nextScenario);
+                    System.out.println("Você chegou em \"" + nextScenario.getName().toUpperCase() + "\".");
+                } else {
+                    System.out.println("Não há caminho para essa direção.");
+                }
+                return;
             }
-            return;
-        }
 
-        // Caso contrário, verificar se a entrada é um objeto (como uma porta)
-        GameObject blockingObject = currentScenario.getObject(input);
-        if (blockingObject != null) {
-            // Verificar se o objeto é abrível e está aberto
-            if (blockingObject.isOpenable()) {
-                if (blockingObject.isOpen()) {
-                    Scenario nextScenario = currentScenario.getExit(input); // Obter o cenário associado a esse objeto
-                    if (nextScenario != null) {
-                        player.setCurrentScenario(nextScenario);
-                        System.out.println("Você chegou em \"" + nextScenario.getName() + "\".");
+            // Caso contrário, verificar se a entrada é um objeto (como uma porta)
+            GameObject blockingObject = currentScenario.getObject(input);
+            if (blockingObject != null) {
+                // Verificar se o objeto é abrível e está aberto
+                if (blockingObject.isOpenable()) {
+                    if (blockingObject.isOpen()) {
+                        Scenario nextScenario = currentScenario.getExit(input); // Obter o cenário associado a esse objeto
+                        if (nextScenario != null) {
+                            player.setCurrentScenario(nextScenario);
+                            System.out.println("Você chegou em \"" + nextScenario.getName() + "\".");
+                        } else {
+                            System.out.println("Esse caminho não leva a lugar nenhum.");
+                        }
                     } else {
-                        System.out.println("Esse caminho não leva a lugar nenhum.");
+                        System.out.println("Esse caminho está fechado.");
                     }
                 } else {
-                    System.out.println("Esse caminho está fechado.");
+                    System.out.println("Esse objeto não pode ser usado para viajar.");
                 }
             } else {
-                System.out.println("Esse objeto não pode ser usado para viajar.");
+                System.out.println("Direção ou objeto inválido.");
             }
         } else {
-            System.out.println("Direção ou objeto inválido.");
+            System.out.println("Preciso de um lugar para entrar...");
         }
     }
 
@@ -169,8 +183,8 @@ public class CommandProcessor {
         if (obj != null) {
             if (obj.isStorable()) {
                 player.addToInventory(obj);
-                player.getCurrentScenario().removeObjectByName(subject);
-                System.out.println("Você pegou \"" + subject.toUpperCase() + "\".");
+                player.getCurrentScenario().removeObject(obj);
+                System.out.println("Você pegou \"" + obj.getName().toUpperCase() + "\".");
             } else {
                 System.out.println("Você não pode pegar isso.");
             }
@@ -184,7 +198,7 @@ public class CommandProcessor {
         if (obj != null) {
             player.removeFromInventory(obj);
             player.getCurrentScenario().addObject(obj);
-            System.out.println("Você soltou \"" + subject.toUpperCase() + "\".");
+            System.out.println("Você soltou \"" + obj.getName().toUpperCase() + "\".");
         } else {
             System.out.println("Você não tem \"%s\".".formatted(subject.toUpperCase()));
         }
@@ -192,24 +206,39 @@ public class CommandProcessor {
 
     /// Se o objeto tiver uma ação, ela será executada. Caso contrário, se ele armazena objetos, a ação será de obter o item.
     private void use(String subject) {
+        // Primeiro, tenta encontrar o objeto no cenário atual
         GameObject obj = player.getCurrentScenario().getObject(subject);
+        
+        // Se não encontrar no cenário, tenta no inventário
+        if (obj == null) {
+            obj = player.getFromInventory(subject);
+        }
+
         if (obj != null) {
-            if (obj.hasAction() ) {
+            if (obj.hasAction()) {
                 obj.getAction().execute();
+                if (!obj.getAction().isRepeatable) {
+                    obj.getAction().setActive(false);
+                }
             } else {
                 if (obj.isStorage()) {
-                    System.out.println("Há alguma coisa dentro desse objeto...");
-                    System.out.println("Você colocou no seu inventário:");
-                    obj.getContents().forEach(e -> {
-                        player.addToInventory(e);
-                        System.out.println("- \"%s\"".formatted(e.getName().toUpperCase()));
-                    });
+                    if (!obj.getContents().isEmpty()) {
+                        System.out.println("Há alguma coisa dentro desse objeto...");
+                        System.out.println("Você colocou no seu inventário:");
+                        obj.getContents().forEach(e -> {
+                            player.addToInventory(e);
+                            System.out.println("- \"%s\"".formatted(e.getName().toUpperCase()));
+                        });
+                        obj.getContents().clear();
+                    } else {
+                        System.out.println("Este objeto está vazio.");
+                    }
                 } else {
                     System.out.println("Esse item não pode ser usado.");
                 }
             }
         } else {
-            System.out.println("Parece não haver \"%s\" ao redor.".formatted(subject).toUpperCase());
+            System.out.println("Parece não haver \"%s\" ao redor.".formatted(subject.toUpperCase()));
         }
     }
 
@@ -235,6 +264,7 @@ public class CommandProcessor {
         }
     }
 
+    // todo: reconsiderando save e load!
     private void saveGame() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("savegame.dat"))) {
             oos.writeObject(this);
