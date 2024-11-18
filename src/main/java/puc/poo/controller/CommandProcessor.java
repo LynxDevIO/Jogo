@@ -188,11 +188,15 @@ public class CommandProcessor {
      * @param subject O objeto a ser aberto.
      */
     private void open(String subject) {
-        GameObject obj = player.getCurrentScenario().getObject(subject);
-        if (obj != null) {
-            obj.unlock(player.getInventory());
+        if (subject != null) {
+            GameObject obj = player.getCurrentScenario().getObject(subject);
+            if (obj != null) {
+                obj.unlock(player.getInventory());
+            } else {
+                System.out.println("Não entendo \"%s\".".formatted(subject.toUpperCase()));
+            }
         } else {
-            System.out.println("Não entendo \"%s\".".formatted(subject.toUpperCase()));
+            System.out.println("Abrir o que?!");
         }
     }
 
@@ -237,23 +241,27 @@ public class CommandProcessor {
      */
     private void drop(String subject) {
         GameObject obj = player.getFromInventory(subject);
-        if (obj != null) {
-            player.removeFromInventory(obj);
-            player.getCurrentScenario().addObject(obj);
-            System.out.println("Você soltou \"%s\".".formatted(obj.getName()));
+        if (subject != null) {
+            if (obj != null) {
+                player.removeFromInventory(obj);
+                player.getCurrentScenario().addObject(obj);
+                System.out.println("Você soltou \"%s\".".formatted(obj.getName()));
 
-            // Se o objeto "Chifres do Veado" for solto no cenário "Interior da Cabana"
-            // o jogador completa o jogo e ele cecha.
-            if (obj.getName().equals("chifres do veado")) {
-                if (player.getCurrentScenario().getName().equals("Interior da Cabana")) {
-                    System.out.println("Parabéns! Você completou o jogo!");
-                    System.exit(0);
-                } else {
-                    System.out.println("Não devo soltar isso aqui.");
+                // Se o objeto "Chifres do Veado" for solto no cenário "Interior da Cabana"
+                // o jogador completa o jogo e ele cecha.
+                if (obj.getName().equals("chifres do veado")) {
+                    if (player.getCurrentScenario().getName().equals("Interior da Cabana")) {
+                        System.out.println("Parabéns! Você completou o jogo!");
+                        System.exit(0);
+                    } else {
+                        System.out.println("Não devo soltar isso aqui.");
+                    }
                 }
+            } else {
+                System.out.println("Você não possui \"%s\" no inventário.".formatted(subject));
             }
         } else {
-            System.out.println("Você não possui \"%s\" no inventário.".formatted(subject));
+            System.out.println("Soltar o que?!");
         }
     }
 
@@ -265,11 +273,11 @@ public class CommandProcessor {
      */
     private void use(String subject) {
         // Primeiro, tenta encontrar o objeto no cenário atual
-        GameObject obj = player.getCurrentScenario().getObject(subject);
+        GameObject obj = player.getCurrentScenario().getObject(subject != null ? subject : "");
         
         // Se não encontrar no cenário, tenta no inventário
         if (obj == null) {
-            obj = player.getFromInventory(subject);
+            obj = player.getFromInventory(subject != null ? subject : "");
         }
 
         // Se o objeto não estiver vazio
@@ -301,7 +309,12 @@ public class CommandProcessor {
                 }
             }
         } else {
-            System.out.println("Parece não haver \"%s\" ao redor.".formatted(subject.toUpperCase()));
+            if (subject != null) {
+                System.out.println("Parece não haver \"%s\" ao redor.".formatted(subject.toUpperCase()));
+            } else {
+                System.out.println("Usar o que?!");
+            }
+
         }
     }
 

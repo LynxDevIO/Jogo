@@ -190,7 +190,7 @@ public class ObjectAction {
 
         if (isActive) {
             if (actionType == ActionType.RIFLE) {
-                if (!player.getCurrentScenario().equals("Floresta")) {
+                if (!player.getCurrentScenario().getName().equals("Floresta")) {
                     System.out.println("Não devo usar isso aqui.");
                 } else {
                     if (stag.isAlive()) {

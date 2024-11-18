@@ -71,6 +71,7 @@ public class Game {
         // Loop principal do jogo
         while (true) {
             if (flag == 0) {
+                System.out.println(player.getCurrentScenario().getImagePath());
                 System.out.println(player.getCurrentScenario().getDescription()); // Exibe a descrição do cenário atual do jogador
                 flag = 1; // Marca que a descrição inicial do cenário já foi exibida
             }
