@@ -1,34 +1,42 @@
 package puc.poo.controller;
 
-import puc.poo.Game;
-import puc.poo.model.Dove;
+import puc.poo.model.Stag;
 import puc.poo.model.GameObject;
 import puc.poo.model.Player;
 import puc.poo.model.Scenario;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static java.io.IO.readln;
 
-/// Classe responsável pelo gerenciamento dos comandos que o jogador vai usar.
+/**
+ * A classe `CommandProcessor` lida com comandos textuais para interagir com o ambiente do jogo.
+ * Ela conecta a entrada do usuário com as ações do jogo, permitindo que os jogadores naveguem
+ * por cenários, manipulem objetos e executem tarefas no jogo usando comandos textuais simples.
+ */
 public class CommandProcessor {
     private Player player;
-    private Dove dove;
+    private Stag stag;
     private Map<String, Scenario> scenarios;
 
+    /**
+     * Construtor da classe `CommandProcessor`.
+     *
+     * @param player    O jogador que está interagindo com o ambiente do jogo.
+     * @param scenarios Um mapa de cenários, onde a chave é o nome do cenário e o valor é o objeto `Scenario`.
+     */
     public CommandProcessor(Player player, Map<String, Scenario> scenarios) {
         this.player = player;
         this.scenarios = scenarios;
     }
 
+    /**
+     * Processa um comando textual fornecido pelo usuário.
+     *
+     * @param command O comando textual a ser processado.
+     */
     public void processCommand(String command) {
         String[] parts = command.split(" ");
         String action = parts[0];
@@ -72,12 +80,6 @@ public class CommandProcessor {
             case "voltar":
                 back();
                 break;
-            case "salvar": // Estou reconsiderando a opção de salvar e carregar um estado pelo terminal.
-                saveGame();
-                break;
-            case "carregar":
-                loadGame();
-                break;
             case "sair":
                 String resposta = readln("Deseja fechar o jogo? ").toLowerCase();
                 if (resposta.equals("sim")) {
@@ -94,13 +96,18 @@ public class CommandProcessor {
             case "ajuda":
                 System.out.println("Lista de comandos: observar/ver, entrar/ir, abrir, fechar, pegar, largar/soltar," +
                         " usar, voltar, i/inventário");
-                System.out.println("Comando de sistema: salvar, carregar, sair");
+                System.out.println("Comando de sistema: sair");
                 break;
             default:
                 System.out.println("Não entendo isso.");
         }
     }
 
+    /**
+     * Move o jogador para um cenário específico com base na entrada fornecida.
+     *
+     * @param input A entrada que especifica para qual cenário o jogador deve se mover.
+     */
     private void goToScenario(String input) {
         Scenario currentScenario = player.getCurrentScenario();
         Set<String> cardinals = Set.of("norte", "sul", "leste", "oeste");
@@ -113,7 +120,12 @@ public class CommandProcessor {
                 // Verificar se existe um cenário nessa direção
                 if (nextScenario != null) {
                     player.setCurrentScenario(nextScenario);
+                    System.out.println(player.getCurrentScenario().getImagePath());
                     System.out.println("Você chegou em \"" + nextScenario.getName().toUpperCase() + "\".");
+                    try {
+                        Thread.sleep(1000);
+                        look(null);
+                    } catch (Exception e) {}
                 } else {
                     System.out.println("Não há caminho para essa direção.");
                 }
@@ -129,7 +141,12 @@ public class CommandProcessor {
                         Scenario nextScenario = currentScenario.getExit(input); // Obter o cenário associado a esse objeto
                         if (nextScenario != null) {
                             player.setCurrentScenario(nextScenario);
+                            System.out.println(player.getCurrentScenario().getImagePath());
                             System.out.println("Você chegou em \"" + nextScenario.getName() + "\".");
+                            try {
+                                Thread.sleep(1000);
+                                look(null);
+                            } catch (Exception e) {}
                         } else {
                             System.out.println("Esse caminho não leva a lugar nenhum.");
                         }
@@ -147,6 +164,11 @@ public class CommandProcessor {
         }
     }
 
+    /**
+     * Descreve o assunto especificado, permitindo que o jogador "olhe" em volta.
+     *
+     * @param subject O assunto a ser descrito.
+     */
     private void look(String subject) {
         if (subject == null) {
             System.out.println(player.getCurrentScenario().getDescription());
@@ -160,24 +182,39 @@ public class CommandProcessor {
         }
     }
 
+    /**
+     * Abre um objeto específico no jogo.
+     *
+     * @param subject O objeto a ser aberto.
+     */
     private void open(String subject) {
         GameObject obj = player.getCurrentScenario().getObject(subject);
         if (obj != null) {
             obj.unlock(player.getInventory());
         } else {
-            System.out.println("Não entendo \"%s\".".formatted(subject).toUpperCase());
+            System.out.println("Não entendo \"%s\".".formatted(subject.toUpperCase()));
         }
     }
 
+    /**
+     * Fecha um objeto específico no jogo.
+     *
+     * @param subject O objeto a ser fechado.
+     */
     private void close(String subject) {
         GameObject obj = player.getCurrentScenario().getObject(subject);
         if (obj != null) {
             obj.lock(player.getInventory());
         } else {
-            System.out.println("Não entendo \"%s\".".formatted(subject).toUpperCase());
+            System.out.println("Não entendo \"%s\".".formatted(subject.toUpperCase()));
         }
     }
 
+    /**
+     * Permite que o jogador pegue um objeto específico no jogo.
+     *
+     * @param subject O objeto a ser pego.
+     */
     private void take(String subject) {
         GameObject obj = player.getCurrentScenario().getObject(subject);
         if (obj != null) {
@@ -193,18 +230,39 @@ public class CommandProcessor {
         }
     }
 
+    /**
+     * Permite que o jogador largue um objeto específico no jogo.
+     *
+     * @param subject O objeto a ser largado.
+     */
     private void drop(String subject) {
         GameObject obj = player.getFromInventory(subject);
         if (obj != null) {
             player.removeFromInventory(obj);
             player.getCurrentScenario().addObject(obj);
-            System.out.println("Você soltou \"" + obj.getName().toUpperCase() + "\".");
+            System.out.println("Você soltou \"%s\".".formatted(obj.getName()));
+
+            // Se o objeto "Chifres do Veado" for solto no cenário "Interior da Cabana"
+            // o jogador completa o jogo e ele cecha.
+            if (obj.getName().equals("chifres do veado")) {
+                if (player.getCurrentScenario().getName().equals("Interior da Cabana")) {
+                    System.out.println("Parabéns! Você completou o jogo!");
+                    System.exit(0);
+                } else {
+                    System.out.println("Não devo soltar isso aqui.");
+                }
+            }
         } else {
-            System.out.println("Você não tem \"%s\".".formatted(subject.toUpperCase()));
+            System.out.println("Você não possui \"%s\" no inventário.".formatted(subject));
         }
     }
 
-    /// Se o objeto tiver uma ação, ela será executada. Caso contrário, se ele armazena objetos, a ação será de obter o item.
+    /**
+     * Usa um objeto específico no jogo. Se o objeto tiver uma ação, esta será executada.
+     * Caso contrário, se ele armazena objetos, a ação será de obter o item.
+     *
+     * @param subject O objeto a ser usado.
+     */
     private void use(String subject) {
         // Primeiro, tenta encontrar o objeto no cenário atual
         GameObject obj = player.getCurrentScenario().getObject(subject);
@@ -214,13 +272,17 @@ public class CommandProcessor {
             obj = player.getFromInventory(subject);
         }
 
+        // Se o objeto não estiver vazio
         if (obj != null) {
+            // Se o objeto tiver ação
             if (obj.hasAction()) {
                 obj.getAction().execute();
                 if (!obj.getAction().isRepeatable) {
                     obj.getAction().setActive(false);
                 }
             } else {
+                // Se o objeto não tiver ação
+                // mas for do tipo armazenamento
                 if (obj.isStorage()) {
                     if (!obj.getContents().isEmpty()) {
                         System.out.println("Há alguma coisa dentro desse objeto...");
@@ -234,6 +296,7 @@ public class CommandProcessor {
                         System.out.println("Este objeto está vazio.");
                     }
                 } else {
+                    // Caso contrário...
                     System.out.println("Esse item não pode ser usado.");
                 }
             }
@@ -242,15 +305,22 @@ public class CommandProcessor {
         }
     }
 
+    /**
+     * Permite que o jogador volte para o cenário anterior.
+     */
     private void back() {
         if (player.hasPreviousScenario()) {
             player.setCurrentScenario(player.getPreviousScenario());
+            System.out.println(player.getCurrentScenario().getImagePath());
             System.out.println("Você voltou a \"%s\".".formatted(player.getCurrentScenario().getName().toUpperCase()));
         } else {
             System.out.println("Não há lugar para retornar.");
         }
     }
 
+    /**
+     * Mostra o inventário atual do jogador.
+     */
     private void showInventory() {
         List<GameObject> inventory = player.getInventory();
 
@@ -264,37 +334,20 @@ public class CommandProcessor {
         }
     }
 
-    // todo: reconsiderando save e load!
-    private void saveGame() {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("savegame.dat"))) {
-            oos.writeObject(this);
-            System.out.println("Jogo salvo com sucesso.");
-        } catch (IOException e) {
-            System.out.println("Erro ao salvar o jogo: " + e.getMessage());
-        }
-    }
-
-    private void loadGame() {
-        File saveFile = new File("savegame.dat");
-        if (!saveFile.exists()) {
-            System.out.println("Não há jogo salvo. Por favor, salve um jogo primeiro.");
-            return; // Finaliza o metodo se nenhum arquivo existe.
-        }
-
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(saveFile))) {
-            Game loadedGame = (Game) ois.readObject();
-            this.player = loadedGame.player;
-            this.scenarios = loadedGame.scenarios;
-            System.out.println("O jogo carregou com sucesso.");
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Erro ao carregar o jogo: " + e.getMessage());
-        }
-    }
-
+    /**
+     * Retorna o mapa de cenários.
+     *
+     * @return O mapa de cenários.
+     */
     public Map<String, Scenario> getScenarios() {
         return scenarios;
     }
 
+    /**
+     * Define o mapa de cenários.
+     *
+     * @param scenarios O novo mapa de cenários a ser definido.
+     */
     public void setScenarios(Map<String, Scenario> scenarios) {
         this.scenarios = scenarios;
     }

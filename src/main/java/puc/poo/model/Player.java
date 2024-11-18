@@ -1,47 +1,83 @@
 package puc.poo.model;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Stack;
 
-/// Classe responsável pela criação e gerenciamento do Jogador.
-public class Player implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
+/**
+ * A classe Player é estruturada para gerenciar o estado do jogador
+ * em termos de localização no cenário, inventário de objetos e rastreamento dos cenários anteriores.
+ * Os métodos incluem adicionar, remover e acessar objetos no inventário,
+ * bem como alterar e verificar o cenário atual e os cenários anteriores.
+ */
+public class Player {
+
     private Scenario currentScenario;
     private final ArrayList<GameObject> inventory;
-    private final Stack<Scenario> previousScenarios; // PILHA para rastrear os cenários anteriores
+    private final Stack<Scenario> previousScenarios;
 
-    public Player() { // Inicializar o inventário e os cenários anteriores que o jogador passou
+    /**
+     * Construtor para inicializar o inventário e os cenários anteriores que o jogador passou.
+     */
+    public Player() {
         inventory = new ArrayList<>();
         previousScenarios = new Stack<>();
     }
 
+    /**
+     * Retorna o cenário atual do jogador.
+     *
+     * @return O cenário atual.
+     */
     public Scenario getCurrentScenario() {
         return currentScenario;
     }
 
+    /**
+     * Define o cenário atual do jogador.
+     * Se já houver um cenário atual, ele será adicionado à pilha de cenários anteriores.
+     *
+     * @param scenario O novo cenário atual.
+     */
     public void setCurrentScenario(Scenario scenario) {
         if (currentScenario != null) {
-            previousScenarios.push(currentScenario); // Coloca o cenário atual na PILHA
+            previousScenarios.push(currentScenario);
         }
         this.currentScenario = scenario;
     }
 
+    /**
+     * Adiciona um objeto ao inventário do jogador.
+     *
+     * @param object O objeto a ser adicionado.
+     */
     public void addToInventory(GameObject object) {
         inventory.add(object);
     }
 
+    /**
+     * Remove um objeto do inventário do jogador com base no nome.
+     *
+     * @param name O nome do objeto a ser removido.
+     */
     public void removeFromInventory(String name) {
         inventory.removeIf(obj -> obj.getName().toLowerCase().contains(name.toLowerCase()));
     }
 
+    /**
+     * Remove um objeto específico do inventário do jogador.
+     *
+     * @param object O objeto a ser removido.
+     */
     public void removeFromInventory(GameObject object) {
         inventory.remove(object);
     }
 
+    /**
+     * Retorna um objeto do inventário com base no nome.
+     *
+     * @param name O nome do objeto a ser procurado.
+     * @return O objeto correspondente ou null se não encontrado.
+     */
     public GameObject getFromInventory(String name) {
         name = name.toLowerCase();
         for (GameObject obj : inventory) {
@@ -52,15 +88,31 @@ public class Player implements Serializable {
         return null;
     }
 
+    /**
+     * Verifica se há um cenário anterior.
+     *
+     * @return Verdadeiro se houver um cenário anterior, falso caso contrário.
+     */
     public boolean hasPreviousScenario() {
-        return !previousScenarios.isEmpty(); // Checa se há um cenário anterior
+        return !previousScenarios.isEmpty();
     }
 
+    /**
+     * Retorna o cenário anterior do jogador.
+     * Remove o cenário anterior da pilha e o retorna.
+     *
+     * @return O cenário anterior.
+     */
     public Scenario getPreviousScenario() {
-        return previousScenarios.pop(); // Remove o cenário anterior da PILHA (e retorna esse cenário)
+        return previousScenarios.pop();
     }
 
+    /**
+     * Retorna a lista de GameObjects que estão no inventário do jogador.
+     *
+     * @return A lista de objetos no inventário.
+     */
     public ArrayList<GameObject> getInventory() {
-        return inventory; // Retorna a lista de GameObjects que estão no inventário do jogador
+        return inventory;
     }
-} 
+}

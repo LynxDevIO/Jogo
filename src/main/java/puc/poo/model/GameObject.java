@@ -1,13 +1,12 @@
 package puc.poo.model;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.ArrayList;
 
-/// Classe responsável pela criação e gerenciamento de objetos do jogo (GameOject).
-public class GameObject implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
+/** A classe GameObject é uma estrutura que pode representar uma variedade de objetos no jogo,
+ * desde simples itens até recipientes que podem ser trancados e destrancados,
+ * além de permitir a realização de ações definidas pelo desenvolvedor.
+ */
+public class GameObject {
 
     private static ArrayList<GameObject> allGameObjects = new ArrayList<>();
 
@@ -19,12 +18,16 @@ public class GameObject implements Serializable {
     private int keyId; // ID da chave para destravar, se aplicável
     private boolean isOpenable; // Objeto é abrível?
     private boolean isOpen; // Objeto está aberto/fechado?
-    // private boolean isLocked; // Objeto está trancado/destrancado?
     private boolean hasAction; // Objeto possui ação?
     private ObjectAction action; // Ação do objeto
     private ArrayList<GameObject> contents; // Conteúdo armazenado
 
-    // Construtor genérico
+    /**
+     * Construtor genérico que inicializa um objeto com um nome e uma descrição.
+     *
+     * @param name        O nome do objeto.
+     * @param description A descrição do objeto.
+     */
     public GameObject(String name, String description) {
         allGameObjects.add(this);
         this.id = allGameObjects.size();
@@ -32,11 +35,18 @@ public class GameObject implements Serializable {
         this.description = description;
     }
 
+    /**
+     * Marca o objeto como armazenável no inventário.
+     */
     public void setAsStorable() {
         this.isStorable = true;
     }
 
-    // Configurar como Storage (pode conter outros objetos)
+    /**
+     * Configura o objeto como um armazenamento que pode conter outros objetos.
+     *
+     * @param storable Indica se o objeto é um armazenamento.
+     */
     public void setAsStorage(boolean storable) {
         this.isStorage = storable;
         if (storable) {
@@ -46,19 +56,32 @@ public class GameObject implements Serializable {
         }
     }
 
-    // Cconfigurar tranca e interatividade
+    /**
+     * Configura a tranca do objeto e se ele é interativo.
+     *
+     * @param keyId  ID da chave necessária para destrancar o objeto.
+     * @param isOpen Indica se o objeto está aberto.
+     */
     public void setLock(int keyId, boolean isOpen) {
         this.keyId = keyId;
         this.isOpen = isOpen;
     }
 
-    // Configurar ação
+    /**
+     * Define uma ação para o objeto.
+     *
+     * @param action A ação a ser associada ao objeto.
+     */
     public void setAction(ObjectAction action) {
         this.action = action;
         this.hasAction = true;
     }
 
-    // Verifica se é interativo (baseado em presença de ação ou tranca)
+    /**
+     * Verifica se o objeto é interativo (baseado na presença de ação ou tranca).
+     *
+     * @return true se o objeto for interativo, false caso contrário.
+     */
     public boolean isInteractive() {
         return hasAction || keyId != 0;
     }
@@ -139,7 +162,11 @@ public class GameObject implements Serializable {
         return action;
     }
 
-    // Métodos para objetos interagíveis e destrancáveis
+    /**
+     * Destranca o objeto usando um inventário fornecido.
+     *
+     * @param inventory O inventário contendo as chaves necessárias.
+     */
     public void unlock(ArrayList<GameObject> inventory) {
         // Se o objeto não for abrível
         if (!this.isOpenable()) {
@@ -171,6 +198,11 @@ public class GameObject implements Serializable {
         System.out.println("Você não possui um item que destranque \"" + this.getName().toUpperCase() + "\".");
     }
 
+    /**
+     * Tranca o objeto usando um inventário fornecido.
+     *
+     * @param inventory O inventário contendo as chaves necessárias.
+     */
     public void lock(ArrayList<GameObject> inventory) {
         // Se o objeto não for abrível
         if (!this.isOpenable()) {
@@ -198,6 +230,12 @@ public class GameObject implements Serializable {
         System.out.println("Você não possui um item que tranque \"" + this.getName().toUpperCase() + "\".");
     }
 
+    /**
+     * Remove um item do conteúdo do objeto e o adiciona ao inventário do jogador.
+     *
+     * @param gameObject O objeto a ser removido do conteúdo.
+     * @param player     O jogador que receberá o objeto.
+     */
     public void getContent(GameObject gameObject, Player player) {
         if (gameObject.isStorable()) {
             if (gameObject.isOpen()) {
@@ -215,7 +253,9 @@ public class GameObject implements Serializable {
         }
     }
 
-    // Executa a ação, se definida
+    /**
+     * Executa a ação associada a este objeto, se houver.
+     */
     public void executeAction() {
         if (action != null) {
             action.execute(); // Chama o execute() da classe ObjectAction
@@ -224,6 +264,11 @@ public class GameObject implements Serializable {
         }
     }
 
+    /**
+     * Retorna todos os objetos instanciados.
+     *
+     * @return Um ArrayList contendo todos os objetos instanciados.
+     */
     public static ArrayList<GameObject> getAllObjects() {
         return allGameObjects;
     }
