@@ -8,8 +8,7 @@ import puc.poo.model.Scenario;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static java.io.IO.readln;
+import java.util.Scanner;
 
 /**
  * A classe `CommandProcessor` lida com comandos textuais para interagir com o ambiente do jogo.
@@ -81,7 +80,9 @@ public class CommandProcessor {
                 back();
                 break;
             case "sair":
-                String resposta = readln("Deseja fechar o jogo? ").toLowerCase();
+                Scanner sc = new Scanner(System.in);
+                System.out.println("Deseja fechar o jogo? ");
+                String resposta = sc.nextLine().toLowerCase();
                 if (resposta.equals("sim")) {
                     System.out.println("Fechando jogo...");
                     System.exit(0);
